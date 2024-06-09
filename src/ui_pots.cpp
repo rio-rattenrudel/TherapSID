@@ -50,7 +50,7 @@ static byte octScale(int value) {
 
 void movedPotAsid(Pot pot, int value) {
 	const potMap* potmap = getPotMap(&pot);
-
+	bool indicateChange[] = {false, false, false};
 	bool useChip[] = {
 	    (asidState.selectedSids.all == 0) || (asidState.selectedSids.b.sid1 && !asidState.selectedSids.b.sid2),
 	    (asidState.selectedSids.all == 0) || (asidState.selectedSids.b.sid2 && !asidState.selectedSids.b.sid1),
@@ -72,6 +72,7 @@ void movedPotAsid(Pot pot, int value) {
 		for (byte i = 0; i < SIDCHIPS; i++) {
 			// Run once for each chip if needed
 			if (useChip[i]) {
+				indicateChange[i] = true;
 
 				if (asidState.isShiftMode) {
 					asidRestorePot(asidState.selectedSids.all == 0 ? -1 : i, potmap->index, pot);
@@ -151,7 +152,8 @@ void movedPotAsid(Pot pot, int value) {
 						break;
 
 					default:
-						// nothing to do
+						// Nothing was changed on this
+						indicateChange[i] = false;
 						break;
 				}
 			}
@@ -161,7 +163,9 @@ void movedPotAsid(Pot pot, int value) {
 	// Update dot indication for changed SIDs, if needed
 	// Only two dots exists, so shows max two
 	for (byte i = 0; i < 2; i++) {
-		asidIndicateChanged(i);
+		if (indicateChange[i]) {
+			asidIndicateChanged(i);
+		}
 	}
 }
 

@@ -300,7 +300,7 @@ void buttChangedAsid(Button button, bool value) {
 		// Pressed
 		byte index = indexFromButton(button);
 		byte chip;
-
+		bool indicateChange[] = {false, false, false};
 		bool all = false;
 		bool checkMoreButtons = false;
 
@@ -311,6 +311,11 @@ void buttChangedAsid(Button button, bool value) {
 			// All chips should be affected
 			all = true;
 			chip = 0;
+			for (byte i = 0; i < SIDCHIPS; i++) {
+				if (!(asidState.isSidFmMode && (i == 1))) {
+					indicateChange[i] = true;
+				}
+			}
 		} else {
 			// One chip selected
 			if (asidState.selectedSids.b.sid1 && !asidState.selectedSids.b.sid2) {
@@ -320,6 +325,7 @@ void buttChangedAsid(Button button, bool value) {
 			} else {
 				chip = 2;
 			}
+			indicateChange[chip] = true;
 		}
 
 		// Check global buttons
@@ -478,7 +484,7 @@ void buttChangedAsid(Button button, bool value) {
 					break;
 
 				default:
-					// nothing to do..
+					indicateChange[chip] = false;
 					break;
 			}
 
@@ -642,14 +648,16 @@ void buttChangedAsid(Button button, bool value) {
 					break;
 
 				default:
-					// nothing to do..
+					indicateChange[chip] = false;
 					break;
 			}
 		}
 
 		// Update dot indication for changed SIDs, if needed
 		for (byte i = 0; i < 2; i++) {
-			asidIndicateChanged(i);
+			if (indicateChange[i]) {
+				asidIndicateChanged(i);
+			}
 		}
 
 	} else {
