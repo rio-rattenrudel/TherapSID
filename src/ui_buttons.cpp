@@ -278,11 +278,16 @@ bool updateChipSoloStatus() {
 
 	// Update SID chip channels & filtermode mute status
 	for (byte c = 0; c < SIDCHIPS; c++) {
-		for (byte v = 0; v < SIDVOICES_PER_CHIP; v++) {
-			asidState.muteChannel[c][v] = shouldSolo && (soloChip != c);
-		}
 
-		asidState.muteFilterMode[c] = shouldSolo && (soloChip != c);
+		bool shouldMute = shouldSolo && (soloChip != c);
+
+		asidState.muteChip[c] = shouldMute;
+
+		if (shouldMute) {
+			asidRawResetRegisterChip(c);
+		} else {
+			asidUpdateLastRemixState(c);
+		}
 	}
 
 	// Update FM channels mute status
@@ -357,7 +362,7 @@ void buttChangedAsid(Button button, bool value) {
 				} else {
 
 					// Restore isOverride States
-					asidUpdateOverrides();
+					asidUpdateOverrides(-1);
 				}
 				break;
 
@@ -506,7 +511,7 @@ void buttChangedAsid(Button button, bool value) {
 						}
 
 						// RIO: should a complete chip be muted? then:
-						// asidState.muteFilterMode[c] = shouldSolo;
+						// asidState.muteChip[c] = shouldSolo;
 					}
 
 					// For FM channels, mute all but the soloed one (or unmute all)
